@@ -1,2 +1,2 @@
 # CloudVMback-end
-Back end for CloudVM, a cloud system for Final Project Cloud Computing 2015
+Back end untuk CloudVM, sebuah Infrastructure as a Service untuk Final Project mata kuliah Komputasi Awan 2015.
