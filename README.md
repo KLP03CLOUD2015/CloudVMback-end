@@ -194,7 +194,9 @@ Fungsi : Untuk membuat instance baru
 
 NOTE: 
 	  - uuid instance akan digenerate otomatis
+
 	  - default value untuk deleted adalah 0 dan status_pembayaran adalah 1 (asumsi sudah di bayarkan)
+	  
 	  - default tanggal adahal tanggal sekarang (NOW())
 
 
