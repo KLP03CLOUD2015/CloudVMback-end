@@ -116,6 +116,7 @@ user_register.post(function(req,res,next){
 	if(errors){
 		res.status(200);
 		res.send(errors);
+		console.log(errors);
 		return;
 	}
 	var data = {
@@ -156,14 +157,7 @@ user_register.post(function(req,res,next){
 					res.statuscode = 500;
 					res.send({result:'error',err:err.code});
 				}
-				res.send({
-					result:'success',
-					msg:'registrasi  berhasil',
-					err:'',
-					fields:fields,
-					json:rows,
-					length:rows.length
-				});
+				res.send([{msg:"registrasi berhasil"}]);
 				connection.release();
 			});
 
