@@ -122,7 +122,7 @@ user_register.post(function(req,res,next){
 	var data = {
 		nama_user:req.body.nama,
 		email_user:req.body.email,
-		password_user:req.body.password,
+		password_user:md5(req.body.password),
 		no_telp_user:req.body.no_telp,
 		nama_perusahaan_user:req.body.nama_perusahaan,
 		alamat_user:req.body.alamat,
@@ -323,7 +323,7 @@ user_edit.post(function(req,res,next){
 
 
 user_login.post(function(req,res,next){
-	req.assert('username','Username tidak boleh kosong').notEmpty();
+	req.assert('email','Username tidak boleh kosong').notEmpty();
 	req.assert('password','Password tidak boleh kosong').notEmpty();
 
 	var errors = req.validationErrors();
@@ -332,7 +332,7 @@ user_login.post(function(req,res,next){
 		return;
 	}
 
-	var username =req.body.username;
+	var email =req.body.email;
 	var password =md5(req.body.password);
 
 
@@ -350,7 +350,7 @@ user_login.post(function(req,res,next){
 
 		else
 		{
-			var sql = 'SELECT id_user,nama_user,password_user FROM user where nama_user= "'+username+'"and password_user = "'+password+'"';
+			var sql = 'SELECT id_user,nama_user,password_user FROM user where email_user= "'+email+'"and password_user = "'+password+'"';
 			console.log(sql)
 			connection.query(sql,function(err,rows,fields)
 			{
@@ -376,7 +376,7 @@ user_login.post(function(req,res,next){
 				{
 					res.send({
 						result:'failed',
-						err:'username tidak ditemukan',
+						err:'email tidak ditemukan',
 					});
 				}
 				
