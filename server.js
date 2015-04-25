@@ -3,7 +3,6 @@ var express = require('express'),
     bodyParser = require('body-parser'),
     expressValidator = require('express-validator'),
 	mysql = require('mysql'),
-	md5 = require('MD5'),
 	crypto = require('crypto'),
 	cors = require('cors'),
 	uuid = require('node-uuid');
@@ -122,7 +121,7 @@ user_register.post(function(req,res,next){
 	var data = {
 		nama_user:req.body.nama,
 		email_user:req.body.email,
-		password_user:md5(req.body.password),
+		password_user:req.body.password,
 		no_telp_user:req.body.no_telp,
 		nama_perusahaan_user:req.body.nama_perusahaan,
 		alamat_user:req.body.alamat,
@@ -253,7 +252,7 @@ user_edit.post(function(req,res,next){
 	req.assert('no_telp','Nomor telepon harus diisi dan berisi angka saja').notEmpty();
 	req.assert('nama_perusahaan','Nama perusahaan harus diisi dan berisikan angka atau huruf saja').notEmpty();
 	req.assert('alamat','Alamat harus diisi').notEmpty();
-	req.assert('nama_cc','Nama pada Kartu Kredit harus diisi').notEmpty().isAlpha();
+	req.assert('nama_cc','Nama pada Kartu Kredit harus diisi').notEmpty();
 	req.assert('alamat_cc','Alamat pada Kartu harus Kredit diisi').notEmpty();
 	req.assert('nomor_cc','Nomor Kartu harus Kredit diisi').notEmpty().isNumeric();
 	req.assert('nomor_vcv','Nomor VCV harus diisi').notEmpty().isNumeric().len(3);
@@ -333,7 +332,7 @@ user_login.post(function(req,res,next){
 	}
 
 	var email =req.body.email;
-	var password =md5(req.body.password);
+	var password =req.body.password;
 
 
 	connectionpool.getConnection(function(err,connection)
