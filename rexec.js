@@ -72,3 +72,40 @@ module.exports.scaleInstance = function(cpu,memori,storage,uuid,nama_instance,ca
         }
      });
 };
+
+module.exports.getInstanceIP = function(uuid,callback)
+{
+    cmds=[   
+            'xe vm-param-get uuid='+uuid+'  param-name=networks'
+        ];
+        rexec(hosts, cmds, ssh_options, function(err){
+        if (err) {
+            console.log(err);
+            callback(err);
+        } else {
+            var ipstring = fs.readFileSync('out.txt','utf8');
+            var ip = ipstring.split(";");
+            var ip2 = ip[0].split(":");
+            console.log(ip2[1]);
+            callback(null,ip2[1]);
+        }
+     });
+};
+
+module.exports.deleteInstance = function(uuid,callback)
+{
+    cmds=[   
+            'xe vm-uninstall uuid='+uuid+'  force=true'
+        ];
+        rexec(hosts, cmds, ssh_options, function(err){
+        if (err) {
+            console.log(err);
+            callback(err);
+        } else {
+            console.log("vm is deleted..")
+            callback(null,uuid);
+
+        }
+     });
+};
+

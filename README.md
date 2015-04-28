@@ -83,6 +83,8 @@ Data yang harus dikirm :
 
 	id_user:<id unik user>
 
+	token:<token yang didapat dari autentikasi login>
+
 	nama_user:<nama asli user>
 
 	email_user:<email user>
@@ -122,6 +124,9 @@ Data yang harus dikirm :
 
 	id_user:<id unik user>
 
+	token:<token yang didapat dari autentikasi login>
+
+
 Fungsi : Untuk menghapus user dari DB
 
 
@@ -137,6 +142,8 @@ Data yang harus dikirm :
 
 	id_user:<id unik user>
 
+	token:<token yang didapat dari autentikasi login>
+
 Fungsi : Menampilkan info user tertentu
 
 Login User
@@ -150,7 +157,40 @@ URL
 Data yang harus dikirm : 
 
 	username:<nama asli user>
+	password:<pasword user>
 
+
+Fungsi : Untuk login user, server akan mengembalikan token yang akan digunakan setiap kali api call yang memodifikasi data sensitif user
+
+
+List instance yang dimiliki user
+
+Metode : POST
+
+URL 
+
+	<url>/user/instances
+
+Data yang harus dikirm : 
+
+	id_user:<id unik user>
+
+	token:<token yang didapat dari autentikasi login>
+
+Fungsi : Menampilkan List instace yang dimiliki suatu user
+
+
+Login User
+
+Metode : POST
+
+URL 
+
+	<url>/user/register
+
+Data yang harus dikirm : 
+
+	username:<nama asli user>
 	password:<pasword user>
 
 
@@ -188,16 +228,55 @@ Data yang harus dikirm :
 
 	nama_instance:<nama dari instance yang akan dibuat>
 
+	token:<token yang didapat dari autentikasi login>
+
 	id_plan:<plan yang digunakan pada instance>
+
+	os:<nama os dari vm yang akan dibuat eg:ubuntu, debian,centos
 
 Fungsi : Untuk membuat instance baru
 
 NOTE: 
+
 	  - uuid instance akan digenerate otomatis
 
 	  - default value untuk deleted adalah 0 dan status_pembayaran adalah 1 (asumsi sudah di bayarkan)
 	  
 	  - default tanggal adahal tanggal sekarang (NOW())
+
+
+
+EditInstance
+
+Metode : POST
+
+URL 
+
+	<url>/instance/edit
+
+Data yang harus dikirm : 
+
+	id_user:<id unik user>
+
+	nama_instance:<nama lama dari instance>
+
+	id_plan:<plan yang digunakan pada instance>
+
+	token:<token yang didapat dari autentikasi login>
+
+	deleted:<status apakah vm sudah didelete atau belum dalam 1 atau 0>
+
+	status_pembayaran:<status pembayaran dari vm apakah sudah dibayarkan atau belum dalam 1 dan 0>
+
+	nama_instance_baru:<nama baru yang ingin digunakan untuk memperbaharui>
+
+	uuid_vm:<uuid dari vm yang akan diubah>
+
+
+
+Fungsi : Untuk mengubah data instance 
+
+
 
 
 Delete Instance
@@ -209,8 +288,12 @@ URL
 	<url>/instance/delete
 
 Data yang harus dikirm : 
+	
+	id_user:<id unik user>
 
-	id_instances:<id unik instances>
+	uuid_vm:<uuid dari vm yang akan dihapus>
+
+	token:<token yang didapat dari autentikasi login>
 
 Fungsi : Untuk menghapus instance
 
@@ -226,7 +309,11 @@ URL
 
 Data yang harus dikirm : 
 
-	id_instances:<id unik instances>
+	id_user:<id unik user>
+
+	uuid_vm:<uuid dari vm yang akan dihapus>
+
+	token:<token yang didapat dari autentikasi login>
 
 Fungsi : Untuk menampilkan info suatu instance
 

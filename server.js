@@ -437,7 +437,7 @@ user_profile.post(function(req, res, next) {
                     hmac.update(rows[0].password_user);
                     var _token = hmac.digest('hex');
                     if (_token == token) {
-                        var sql = 'select id_user,nama_user,email_user,no_telp_user,nama_perusahaan_user,alamat_user,nama_cc_user,alamat_cc_user,nomor_cc_user,nomor_vcv_user,expire_month_cc_user,expire_year_cc_user from user where id_user= "' + id_user + '"';
+                        var sql = 'select id_user,nama_user,email_user,no_telp_user,nama_perusahaan_user,alamat_user,nama_cc_user,alamat_cc_user,nomor_cc_user,nomor_vcv_user,expire_month_cc_user,expire_year_cc_user from user where id_user= ' + id_user ;
                         console.log(sql)
                         connection.query(sql, function(err, rows, fields) {
                             if (err) {
@@ -795,8 +795,8 @@ instance_edit.post(function(req, res, next) {
 
 instance_delete.delete(function(req, res, next) {
 
-    var id_instances = req.body.id_instances;
-    var id_user = req.body.id_instances;
+    var uuid_vm = req.body.uuid_vm;
+    var id_user = req.body.id_user;
     var token = req.body.token;
 
     connectionpool.getConnection(function(err, connection) {
@@ -825,35 +825,45 @@ instance_delete.delete(function(req, res, next) {
                     hmac.update(rows[0].password_user);
                     var _token = hmac.digest('hex');
                     if (_token == token) {
-                        connectionpool.getConnection(function(err, connection) {
-                            if (err) {
-                                console.error('CONNECTION ERROR:', err);
-                                res.statusCode = 503;
-                                res.send({
-                                    result: 'error',
-                                    err: err.code
+                        async.waterfall([
+                            function(callback)
+                            {
+                                bridge.deleteInstance(uuid_vm,callback);
+                            },
+                            function(callback)
+                            {
+                                    connectionpool.getConnection(function(err, connection) {
+                                    if (err) {
+                                        console.error('CONNECTION ERROR:', err);
+                                        res.statusCode = 503;
+                                        res.send({
+                                            result: 'error',
+                                            err: err.code
+                                        });
+                                    }
+                                    var sql = 'update instances set deleted = 1 where uuid_vm= "' + uuid_vm+'"';
+                                    console.log(sql)
+                                    connection.query(sql, function(err, rows, fields) {
+                                        if (err) {
+                                            console.error(err);
+                                            res.statuscode = 500;
+                                            res.send({
+                                                result: 'error',
+                                                err: err.code
+                                            });
+                                        } else {
+                                            res.send({
+                                                result: 'success',
+                                                err: '',
+                                                msg: 'instance telah di hapus'
+                                            });
+                                        }
+                                        connection.release();
+                                    });
                                 });
                             }
-                            var sql = 'update instances set deleted = 1 where id_instances= ' + id_instances;
-                            console.log(sql)
-                            connection.query(sql, function(err, rows, fields) {
-                                if (err) {
-                                    console.error(err);
-                                    res.statuscode = 500;
-                                    res.send({
-                                        result: 'error',
-                                        err: err.code
-                                    });
-                                } else {
-                                    res.send({
-                                        result: 'success',
-                                        err: '',
-                                        msg: 'instance telah di hapus'
-                                    });
-                                }
-                                connection.release();
-                            });
-                        });
+                            
+                        ]);
 
                     } else {
                         res.send({
@@ -911,8 +921,8 @@ instance_list.get(function(req, res, next) {
 instance_info.post(function(req, res, next) {
 
 
-    var id_instances = req.body.id_instances;
-    var id_user = req.body.id_instances;
+    var uuid_vm = req.body.uuid_vm;
+    var id_user = req.body.id_user;
     var token = req.body.token;
 
     connectionpool.getConnection(function(err, connection) {
@@ -954,26 +964,38 @@ instance_info.post(function(req, res, next) {
                                     err: err.code
                                 });
                             } else {
-                                var sql = 'select * from instances where id_instances = ' + id_instances;
-                                console.log(sql)
-                                connection.query(sql, function(err, rows, fields) {
-                                    if (err) {
-                                        console.error(err);
-                                        res.statuscode = 500;
-                                        res.send({
-                                            result: 'error',
-                                            err: err.code
-                                        });
-                                    } else {
-                                        res.send({
-                                            result: 'success',
-                                            err: '',
-                                            json: rows
+                                async.waterfall([
+                                    function(callback)
+                                    {
+                                        bridge.getInstanceIP(uuid_vm,callback)
+                                    },
+                                    function(arg0,callback)
+                                    {
+                                        var sql = 'select * from instances where uuid_vm = "' + uuid_vm +'"';
+                                        console.log(sql)
+                                        connection.query(sql, function(err, rows, fields) {
+                                            if (err) {
+                                                console.error(err);
+                                                res.statuscode = 500;
+                                                res.send({
+                                                    result: 'error',
+                                                    err: err.code
+                                                });
+                                            } else {
+                                                res.send({
+                                                    result: 'success',
+                                                    err: '',
+                                                    ip:arg0,
+                                                    json: rows
+                                                });
+                                            }
+                                            callback(null);
+
+                                            connection.release();
                                         });
                                     }
 
-                                    connection.release();
-                                });
+                                ]);
 
                             }
                         });
