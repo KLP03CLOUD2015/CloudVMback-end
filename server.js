@@ -8,7 +8,11 @@ var express = require('express'),
     uuid = require('node-uuid'),
     rexec = require('remote-exec'),
 	fs = require('fs'),
-	async = require('async');
+	async = require('async'),
+	bridge = require("./rexec.js");
+
+
+
 
 var ssh_options = {
     port: 2222,
@@ -46,6 +50,7 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json());
 app.use(expressValidator());
 app.use(cors());
+
 
 
 var user_router = express.Router();
@@ -597,28 +602,13 @@ instance_create.post(function(req, res, next) {
 		                        	{
 		                        		os = 'centos-template';
 		                        	}
-		                    		cmds=['xe vm-clone vm='+os+' new-name-label='+req.body.nama_instance];
-		                            rexec(hosts, cmds, ssh_options, function(err){
-									    if (err) {
-									        console.log(err);
-									    } else {
-									        console.log('a vm has been created');
-									        callback(null);
-									    }
-									});
+		                        	bridge.createInstance(os,nama_instance,callback);
+
 		                        },
 
 
-                        		function(callback){
-		                    		cmds=['xe vm-list name-label='+nama_instance+' --minimal'];
-		                            rexec(hosts, cmds, ssh_options, function(err){
-									    if (err) {
-									        console.log(err);
-									    } else {
-									        var uuid_vm = fs.readFileSync('out.txt','utf8');
-									        callback(null,uuid_vm);
-								     	}
-								     });
+                        		function(arg0,callback){
+		                    		var uuid_vm = bridge.getInstanceUUID(nama_instance,callback);
 							     },
 							     function(arg0,callback)
 							     {
@@ -631,26 +621,10 @@ instance_create.post(function(req, res, next) {
 			                                        result: 'error',
 			                                        err: err.code
 			                                    });
-			                                } else 
+			                                } 
+			                                else 
 			                                {
-	       			                           cmds=[   
-	       			                           			'xe vm-param-set VCPUs-at-startup='+rows[0].jumlah_cpu+' uuid='+arg0,
-												  		'xe vm-param-set VCPUs-max='+rows[0].jumlah_cpu+' uuid='+arg0,
-												  		'xe vm-param-set memory-static-min=0 uuid='+arg0,
-												  		'xe vm-param-set memory-dynamic-min=1024 uuid='+arg0,
-												  		'xe vm-param-set memory-static-max='+rows[0].jumlah_memori+'GiB uuid='+arg0,
-												  		'xe vm-param-set memory-dynamic-max='+rows[0].jumlah_memori+'GiB uuid='+arg0,
-												  		'resize_vm_disk '+nama_instance+' '+rows[0].jumlah_storage
-
-			                            		 	];
-			                            		 	rexec(hosts, cmds, ssh_options, function(err){
-												    if (err) {
-												        console.log(err);
-												    } else {
-												    	console.log("new vm configured successfully..");
-												        callback(null,arg0);
-											     	}
-											     });
+	    										bridge.scaleInstance(rows[0].jumlah_cpu,rows[0].jumlah_memori,rows[0].jumlah_storage,arg0,nama_instance,callback);
 			                                }
 
 			                            });
@@ -658,7 +632,6 @@ instance_create.post(function(req, res, next) {
 							     function(arg1,callback)
 							     {
 							     	 	var sql = 'INSERT INTO INSTANCES  (id_user,nama_instance,uuid_vm,id_plan,status_pembayaran,deleted,tanggal) values("' + id_user + '","' + nama_instance + '","' + arg1+ '",' + id_plan + ',1,0,NOW())';
-			                            console.log(sql)
 			                            connection.query(sql, function(err, rows, fields) {
 			                                if (err) {
 			                                    console.error(err);
@@ -677,6 +650,7 @@ instance_create.post(function(req, res, next) {
 
 			                                connection.release();
 			                            });
+			                            callback(null);
 							     }]);   
 
 
@@ -706,9 +680,10 @@ instance_edit.post(function(req, res, next) {
         res.send(errors);
         return;
     }
-    var id_instances = req.body.id_instances;
+    var uuid_vm = req.body.uuid_vm;
     var id_user = req.body.id_user;
     var nama_instance = req.body.nama_instance;
+    var nama_instance_baru = req.body.nama_instance;
     var id_plan = req.body.id_plan;
     var tanggal = req.body.tanggal;
     var deleted = req.body.deleted;
@@ -748,27 +723,55 @@ instance_edit.post(function(req, res, next) {
                                     result: 'error',
                                     err: err.code
                                 });
-                            } else {
-                                var sql = 'UPDATE INSTANCES SET id_user = "' + id_user + '",nama_instance = "' + nama_instance + '",id_plan = ' + id_plan + ' , tanggal ="' + tanggal + '",status_pembayaran =' + status_pembayaran + ',deleted=' + deleted + ' where id_instances = ' + id_instances;
-                                console.log(sql)
-                                connection.query(sql, function(err, rows, fields) {
-                                    if (err) {
-                                        console.error(err);
-                                        res.statuscode = 500;
-                                        res.send({
-                                            result: 'error',
-                                            err: err.code
-                                        });
-                                    } else {
-                                        res.send({
-                                            result: 'success',
-                                            err: '',
-                                            json: rows
-                                        });
-                                    }
+                            } else 
+                            {
+                            	async.waterfall
+                            	([
+                            		 function(callback)
+							     	 {
+ 	 									var spec_sql = 'select jumlah_cpu , jumlah_memori , jumlah_storage from pricing where id_plan ='+id_plan;
+			                            connection.query(spec_sql, function(err, rows, fields) {
+			                                if (err) {
+			                                    console.error(err);
+			                                    res.statuscode = 500;
+			                                    res.send({
+			                                        result: 'error',
+			                                        err: err.code
+			                                    });
+			                                } 
+			                                else 
+			                                {
+	    										bridge.scaleInstance(rows[0].jumlah_cpu,rows[0].jumlah_memori,rows[0].jumlah_storage,uuid_vm,nama_instance,callback);
+			                                }
 
-                                    connection.release();
-                                });
+			                            });
+							     	},
+                            		function(arg0,callback)
+                            		{
+	                            		var sql = 'UPDATE INSTANCES SET id_user = "' + id_user + '",nama_instance = "' + nama_instance_baru + '",id_plan = ' + id_plan + ' , tanggal ="' + tanggal + '",status_pembayaran =' + status_pembayaran + ',deleted=' + deleted + ' where uuid_vm = "' + arg0 +'"';
+		                                console.log(sql)
+		                                connection.query(sql, function(err, rows, fields) {
+		                                    if (err) {
+		                                        console.error(err);
+		                                        res.statuscode = 500;
+		                                        res.send({
+		                                            result: 'error',
+		                                            err: err.code
+		                                        });
+		                                    } else {
+		                                        res.send({
+		                                            result: 'success',
+		                                            err: '',
+		                                            json: rows
+		                                        });
+		                                    }
+
+		                                    connection.release();
+		                                });
+		                                	callback(null)
+		                            }
+                        		]);
+                                
 
                             }
 
