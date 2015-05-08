@@ -68,10 +68,14 @@ var instance_delete = instance_router.route('/delete');
 var instance_list = instance_router.route('/list');
 var instance_info = instance_router.route('/info');
 var instance_edit = instance_router.route('/edit');
+var plan_router = express.Router();
+var price_list = plan_router.route('/price_list')
 
 
 app.use('/user', user_router);
 app.use('/instance', instance_router);
+app.use('/plan', plan_router);
+
 
 
 
@@ -1011,6 +1015,41 @@ instance_info.post(function(req, res, next) {
             });
         }
 
+
+    });
+});
+
+
+
+price_list.get(function(req, res, next) {
+
+    connectionpool.getConnection(function(err, connection) {
+
+        if (err) {
+            console.error('CONNECTION ERROR:', err);
+            res.statusCode = 503;
+            res.send({
+                result: 'error',
+                err: err.code
+            });
+        } else {
+            var sql = 'SELECT * FROM pricing';
+            console.log(sql)
+            connection.query(sql, function(err, rows, fields) {
+                if (err) {
+                    console.error(err);
+                    res.statuscode = 500;
+                    res.send({
+                        result: 'error',
+                        err: err.code
+                    });
+                }
+                res.send([rows]
+                );
+                connection.release();
+            });
+
+        }
 
     });
 });
