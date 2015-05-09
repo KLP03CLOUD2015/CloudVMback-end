@@ -1057,6 +1057,11 @@ price_list.get(function(req, res, next) {
 // BEGIN manajemen vm
 instance_start.post(function(req, res, next) {
 
+
+    var id_user = req.body.id_user;
+    var token = req.body.token;
+
+
     /*lengkapin validasinya lagi */
     req.assert('uuid_vm', 'Tidak ada UUID VM').notEmpty();
     var errors = req.validationErrors();
@@ -1066,27 +1071,82 @@ instance_start.post(function(req, res, next) {
         console.log(errors);
         return;
     }
-    cmds=[
-            'python vm-control.py start ' + req.body.uuid_vm + ' /root/hosts.txt'
-        ];
-    rexec(cfg.hosts, cmds, cfg.conn_options, function(err){
+
+     connectionpool.getConnection(function(err, connection) {
         if (err) {
-            console.log(err);
+            console.error('CONNECTION ERROR:', err);
+            res.statusCode = 503;
             res.send({
+                result: 'error',
+                err: err.code
+            });
+        } else {
+            var validate_sql = 'SELECT email_user , password_user from user where id_user = ' + id_user;
+            var validate_result;
+
+            connection.query(validate_sql, function(err, rows, fields) {
+                if (err) {
+                    console.error(err);
+                    res.statuscode = 500;
+                    res.send({
                         result: 'error',
                         err: err.code
                     });
-        } else {
-            console.log('vm '+ req.body.uuid_vm + ' started');
-            res.send({
-                result: 'vm_start_succeed'
+                }
+
+                if (rows.length > 0) {
+                    hmac = crypto.createHmac('sha256', '12jh34k1wgh5w4g3hg243g423jjh4k324c2g3g4c');
+                    hmac.update(rows[0].email_user);
+                    hmac.update(rows[0].password_user);
+                    var _token = hmac.digest('hex');
+                    if (_token == token) {
+                        connectionpool.getConnection(function(err, connection) {
+
+                            var id_instances = req.body.id_instances;
+                            if (err) {
+                                console.error('CONNECTION ERROR:', err);
+                                res.statusCode = 503;
+                                res.send({
+                                    result: 'error',
+                                    err: err.code
+                                });
+                            } 
+                            else 
+                            {
+                                   cmds=[
+                                            'python vm-control.py start ' + req.body.uuid_vm + ' /root/hosts.txt'
+                                        ];
+                                    rexec(cfg.hosts, cmds, cfg.conn_options, function(err){
+                                        if (err) {
+                                            console.log(err);
+                                            res.send({
+                                                        result: 'error',
+                                                        err: err.code
+                                                    });
+                                        } else {
+                                            console.log('vm '+ req.body.uuid_vm + ' started');
+                                            res.send({
+                                                result: 'vm_start_succeed'
+                                            });
+                                        }
+                                    });
+                            }
+                        });
+
+                    } 
+                }
             });
         }
-    });
+    }); 
 });
+
+    
 
 instance_stop.post(function(req, res, next) {
 
+    var id_user = req.body.id_user;
+    var token = req.body.token;
+
     /*lengkapin validasinya lagi */
     req.assert('uuid_vm', 'Tidak ada UUID VM').notEmpty();
     var errors = req.validationErrors();
@@ -1096,28 +1156,83 @@ instance_stop.post(function(req, res, next) {
         console.log(errors);
         return;
     }
-    cmds=[
-            'python vm-control.py stop ' + req.body.uuid_vm + ' /root/hosts.txt'
-        ];
-    rexec(cfg.hosts, cmds, cfg.conn_options, function(err){
+
+        connectionpool.getConnection(function(err, connection) {
         if (err) {
-            console.log(err);
+            console.error('CONNECTION ERROR:', err);
+            res.statusCode = 503;
             res.send({
+                result: 'error',
+                err: err.code
+            });
+        } else {
+            var validate_sql = 'SELECT email_user , password_user from user where id_user = ' + id_user;
+            var validate_result;
+
+            connection.query(validate_sql, function(err, rows, fields) {
+                if (err) {
+                    console.error(err);
+                    res.statuscode = 500;
+                    res.send({
                         result: 'error',
                         err: err.code
                     });
-        } else {
-            console.log('vm '+ req.body.uuid_vm + ' stopped');
-            res.send({
-                result: 'vm_stop_succeed'
+                }
+
+                if (rows.length > 0) {
+                    hmac = crypto.createHmac('sha256', '12jh34k1wgh5w4g3hg243g423jjh4k324c2g3g4c');
+                    hmac.update(rows[0].email_user);
+                    hmac.update(rows[0].password_user);
+                    var _token = hmac.digest('hex');
+                    if (_token == token) {
+                        connectionpool.getConnection(function(err, connection) {
+
+                            var id_instances = req.body.id_instances;
+                            if (err) {
+                                console.error('CONNECTION ERROR:', err);
+                                res.statusCode = 503;
+                                res.send({
+                                    result: 'error',
+                                    err: err.code
+                                });
+                            } 
+                            else 
+                            {
+                                    cmds=[
+                                            'python vm-control.py stop ' + req.body.uuid_vm + ' /root/hosts.txt'
+                                         ];
+                                    rexec(cfg.hosts, cmds, cfg.conn_options, function(err){
+                                        if (err) {
+                                            console.log(err);
+                                            res.send({
+                                                        result: 'error',
+                                                        err: err.code
+                                                    });
+                                        } else {
+                                            console.log('vm '+ req.body.uuid_vm + ' stopped');
+                                            res.send({
+                                                result: 'vm_stop_succeed'
+                                            });
+                                        }
+                                    });
+                            }
+                        });
+
+                    } 
+                }
             });
         }
-    });
+    }); 
 });
+
+   
 
 instance_reboot.post(function(req, res, next) {
 
-    /*lengkapin validasinya lagi */
+
+    var id_user = req.body.id_user;
+    var token = req.body.token;
+
     req.assert('uuid_vm', 'Tidak ada UUID VM').notEmpty();
     var errors = req.validationErrors();
     if (errors) {
@@ -1126,22 +1241,79 @@ instance_reboot.post(function(req, res, next) {
         console.log(errors);
         return;
     }
-    cmds=[
-            'python vm-control.py reboot ' + req.body.uuid_vm + ' /root/hosts.txt'
-        ];
-    rexec(cfg.hosts, cmds, cfg.conn_options, function(err){
+
+    connectionpool.getConnection(function(err, connection) {
         if (err) {
-            console.log(err);
+            console.error('CONNECTION ERROR:', err);
+            res.statusCode = 503;
             res.send({
+                result: 'error',
+                err: err.code
+            });
+        } else {
+            var validate_sql = 'SELECT email_user , password_user from user where id_user = ' + id_user;
+            var validate_result;
+
+            connection.query(validate_sql, function(err, rows, fields) {
+                if (err) {
+                    console.error(err);
+                    res.statuscode = 500;
+                    res.send({
                         result: 'error',
                         err: err.code
                     });
-        } else {
-            console.log('vm '+ req.body.uuid_vm + ' rebooted');
-            res.send({
-                result: 'vm_reboot_succeed'
+                }
+
+                if (rows.length > 0) {
+                    hmac = crypto.createHmac('sha256', '12jh34k1wgh5w4g3hg243g423jjh4k324c2g3g4c');
+                    hmac.update(rows[0].email_user);
+                    hmac.update(rows[0].password_user);
+                    var _token = hmac.digest('hex');
+                    if (_token == token) {
+                        connectionpool.getConnection(function(err, connection) {
+
+                            var id_instances = req.body.id_instances;
+                            if (err) {
+                                console.error('CONNECTION ERROR:', err);
+                                res.statusCode = 503;
+                                res.send({
+                                    result: 'error',
+                                    err: err.code
+                                });
+                            } 
+                            else 
+                            {
+                                cmds=['python vm-control.py reboot ' + req.body.uuid_vm + ' /root/hosts.txt'];
+                                rexec(cfg.hosts, cmds, cfg.conn_options, function(err){
+                                    if (err) {
+                                        console.log(err);
+                                        res.send({
+                                                    result: 'error',
+                                                    err: err.code
+                                                });
+                                    } else {
+                                        console.log('vm '+ req.body.uuid_vm + ' rebooted');
+                                        res.send({
+                                            result: 'vm_reboot_succeed'
+                                        });
+                                    }
+                                });
+                            }
+                        });
+
+                    } 
+                }
             });
         }
-    });
+    }); 
 });
+
+
+
 // END manajemen vm
+
+
+
+
+
+
