@@ -317,7 +317,36 @@ Data yang harus dikirm :
 
 Fungsi : Untuk menampilkan info suatu instance
 
+Start Instance
 
+Metode : POST
 
+URL
+    <url>/instance/start
+Data yang harus dikirim :
+    uuid_vm : <uuid dari vm yang ingin dijalankan>
 
+Fungsi : untuk menjalankan vm sesuai uuid yang diberikan
+
+Stop Instance
+
+Metode : POST
+
+URL
+    <url>/instance/stop
+Data yang harus dikirim :
+    uuid_vm : <uuid dari vm yang ingin dihentikan>
+
+Fungsi : untuk menghentikan vm sesuai uuid yang diberikan
+
+Reboot Instance
+
+Metode : POST
+
+URL
+    <url>/instance/reboot
+Data yang harus dikirim :
+    uuid_vm : <uuid dari vm yang ingin di reboot>
+
+Fungsi : untuk reboot vm sesuai uuid yang diberikan
 

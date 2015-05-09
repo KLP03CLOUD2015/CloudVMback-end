@@ -7,34 +7,12 @@ var express = require('express'),
     cors = require('cors'),
     uuid = require('node-uuid'),
     rexec = require('remote-exec'),
-	fs = require('fs'),
 	async = require('async'),
-	bridge = require("./rexec.js");
+	bridge = require('./rexec'),
+    fs = require('fs'),
+    cfg = require('./config');
 
-
-
-
-var ssh_options = {
-    port: 2222,
-    username: 'root',
-    password:'cloudvm',
-    stdout: fs.createWriteStream('out.txt')
-};
-
-var hosts = [
-    'cloudvm.ddns.net'
-];
- 
- 
-
-
-var connectionpool = mysql.createPool({
-    connectionLimit: 1000,
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'cloudVM'
-});
+var connectionpool = cfg.connectionpool;
 
 app.listen(8183);
 
@@ -68,8 +46,13 @@ var instance_delete = instance_router.route('/delete');
 var instance_list = instance_router.route('/list');
 var instance_info = instance_router.route('/info');
 var instance_edit = instance_router.route('/edit');
+
+var instance_start = instance_router.route('/start');
+var instance_stop = instance_router.route('/stop');
+var instance_reboot = instance_router.route('/reboot');
+
 var plan_router = express.Router();
-var price_list = plan_router.route('/price_list')
+var price_list = plan_router.route('/price_list');
 
 
 app.use('/user', user_router);
@@ -93,7 +76,7 @@ user_list.get(function(req, res, next) {
             });
         } else {
             var sql = 'SELECT * FROM user ORDER BY id_user';
-            console.log(sql)
+            console.log(sql);
             connection.query(sql, function(err, rows, fields) {
                 if (err) {
                     console.error(err);
@@ -171,7 +154,7 @@ user_register.post(function(req, res, next) {
             });
         } else {
             var sql = 'INSERT INTO user SET ?';
-            console.log(sql)
+            console.log(sql);
             connection.query(sql, data, function(err, rows, fields) {
                 if (err) {
                     console.error(err);
@@ -330,7 +313,7 @@ user_login.post(function(req, res, next) {
             });
         } else {
             var sql = 'SELECT id_user,email_user,password_user FROM user where email_user= "' + email + '"and password_user = "' + password + '"';
-            console.log(sql)
+            console.log(sql);
             connection.query(sql, function(err, rows, fields) {
                 if (err) {
                     console.error(err);
@@ -383,7 +366,7 @@ user_delete.delete(function(req, res, next) {
             });
         } else {
             var sql = 'delete from user where id_user= "' + id_user + '"';
-            console.log(sql)
+            console.log(sql);
             connection.query(sql, function(err, rows, fields) {
                 if (err) {
                     console.error(err);
@@ -411,7 +394,7 @@ user_delete.delete(function(req, res, next) {
 user_profile.post(function(req, res, next) {
 
     var id_user = req.body.id_user;
-    var token = req.body.token
+    var token = req.body.token;
 
 
     connectionpool.getConnection(function(err, connection) {
@@ -442,7 +425,7 @@ user_profile.post(function(req, res, next) {
                     var _token = hmac.digest('hex');
                     if (_token == token) {
                         var sql = 'select id_user,nama_user,email_user,no_telp_user,nama_perusahaan_user,alamat_user,nama_cc_user,alamat_cc_user,nomor_cc_user,nomor_vcv_user,expire_month_cc_user,expire_year_cc_user from user where id_user= ' + id_user ;
-                        console.log(sql)
+                        console.log(sql);
                         connection.query(sql, function(err, rows, fields) {
                             if (err) {
                                 console.error(err);
@@ -480,7 +463,7 @@ user_profile.post(function(req, res, next) {
 user_instances.post(function(req, res, next) {
 
     var id_user = req.body.id_user;
-    var token = req.body.token
+    var token = req.body.token;
 
 
     connectionpool.getConnection(function(err, connection) {
@@ -511,7 +494,7 @@ user_instances.post(function(req, res, next) {
                     var _token = hmac.digest('hex');
                     if (_token == token) {
                         var sql = 'select * from instances where id_user= "' + id_user + '"';
-                        console.log(sql)
+                        console.log(sql);
                         connection.query(sql, function(err, rows, fields) {
                             if (err) {
                                 console.error(err);
@@ -591,9 +574,26 @@ instance_create.post(function(req, res, next) {
                         var _token = hmac.digest('hex');
                         if (_token == token) {
                         	async.waterfall([
+                                // find best host. current best host = cloudvm2.ddns.net
 	  							function(callback)
+                                {
+                                    cmds=[
+                                        'python balancer.py /root/hosts.txt'
+                                    ];
+                                    rexec(cfg.hosts, cmds, cfg.conn_options, function(err){
+                                        if (err) {
+                                            console.log(err);
+                                        } else {
+                                            best_host = fs.readFileSync('out.txt','utf8');
+                                            cfg.hosts = best_host.trim();
+                                            callback();
+                                        }
+                                    });
+                                },
+
+                                function(callback)
 	  							{
-		                        	var os = ""
+		                        	var os = "";
 		                        	if(req.body.os == 'ubuntu')
 		                        	{
 		                        		os = 'ubuntu-template';
@@ -610,10 +610,9 @@ instance_create.post(function(req, res, next) {
 
 		                        },
 
-
-                        		function(arg0,callback){
-		                    		var uuid_vm = bridge.getInstanceUUID(nama_instance,callback);
-							     },
+            //             		function(arg0,callback){
+		          //           		var uuid_vm = bridge.getInstanceUUID(nama_instance,callback);
+							     // },
 							     function(arg0,callback)
 							     {
  	 									var spec_sql = 'select jumlah_cpu , jumlah_memori , jumlah_storage from pricing where id_plan ='+id_plan;
@@ -653,6 +652,8 @@ instance_create.post(function(req, res, next) {
 			                                }
 
 			                                connection.release();
+                                            // reset back to master/host awal
+                                            cfg.hosts = 'cloudvm2.ddns.net';
 			                            });
 			                            callback(null);
 							     }]);   
@@ -753,7 +754,7 @@ instance_edit.post(function(req, res, next) {
                             		function(arg0,callback)
                             		{
 	                            		var sql = 'UPDATE INSTANCES SET id_user = "' + id_user + '",nama_instance = "' + nama_instance_baru + '",id_plan = ' + id_plan + ' , tanggal ="' + tanggal + '",status_pembayaran =' + status_pembayaran + ',deleted=' + deleted + ' where uuid_vm = "' + arg0 +'"';
-		                                console.log(sql)
+		                                console.log(sql);
 		                                connection.query(sql, function(err, rows, fields) {
 		                                    if (err) {
 		                                        console.error(err);
@@ -772,10 +773,9 @@ instance_edit.post(function(req, res, next) {
 
 		                                    connection.release();
 		                                });
-		                                	callback(null)
+		                                	callback(null);
 		                            }
                         		]);
-                                
 
                             }
 
@@ -846,7 +846,7 @@ instance_delete.delete(function(req, res, next) {
                                         });
                                     }
                                     var sql = 'update instances set deleted = 1 where uuid_vm= "' + uuid_vm+'"';
-                                    console.log(sql)
+                                    console.log(sql);
                                     connection.query(sql, function(err, rows, fields) {
                                         if (err) {
                                             console.error(err);
@@ -897,7 +897,7 @@ instance_list.get(function(req, res, next) {
             });
         } else {
             var sql = 'select * from instances';
-            console.log(sql)
+            console.log(sql);
             connection.query(sql, function(err, rows, fields) {
                 if (err) {
                     console.error(err);
@@ -971,12 +971,12 @@ instance_info.post(function(req, res, next) {
                                 async.waterfall([
                                     function(callback)
                                     {
-                                        bridge.getInstanceIP(uuid_vm,callback)
+                                        bridge.getInstanceIP(uuid_vm,callback);
                                     },
                                     function(arg0,callback)
                                     {
                                         var sql = 'select * from instances where uuid_vm = "' + uuid_vm +'"';
-                                        console.log(sql)
+                                        console.log(sql);
                                         connection.query(sql, function(err, rows, fields) {
                                             if (err) {
                                                 console.error(err);
@@ -1034,7 +1034,7 @@ price_list.get(function(req, res, next) {
             });
         } else {
             var sql = 'SELECT * FROM pricing';
-            console.log(sql)
+            console.log(sql);
             connection.query(sql, function(err, rows, fields) {
                 if (err) {
                     console.error(err);
@@ -1053,3 +1053,95 @@ price_list.get(function(req, res, next) {
 
     });
 });
+
+// BEGIN manajemen vm
+instance_start.post(function(req, res, next) {
+
+    /*lengkapin validasinya lagi */
+    req.assert('uuid_vm', 'Tidak ada UUID VM').notEmpty();
+    var errors = req.validationErrors();
+    if (errors) {
+        res.status(200);
+        res.send(errors);
+        console.log(errors);
+        return;
+    }
+    cmds=[
+            'python vm-control.py start ' + req.body.uuid_vm + ' /root/hosts.txt'
+        ];
+    rexec(cfg.hosts, cmds, cfg.conn_options, function(err){
+        if (err) {
+            console.log(err);
+            res.send({
+                        result: 'error',
+                        err: err.code
+                    });
+        } else {
+            console.log('vm '+ req.body.uuid_vm + ' started');
+            res.send({
+                result: 'vm_start_succeed'
+            });
+        }
+    });
+});
+
+instance_stop.post(function(req, res, next) {
+
+    /*lengkapin validasinya lagi */
+    req.assert('uuid_vm', 'Tidak ada UUID VM').notEmpty();
+    var errors = req.validationErrors();
+    if (errors) {
+        res.status(200);
+        res.send(errors);
+        console.log(errors);
+        return;
+    }
+    cmds=[
+            'python vm-control.py stop ' + req.body.uuid_vm + ' /root/hosts.txt'
+        ];
+    rexec(cfg.hosts, cmds, cfg.conn_options, function(err){
+        if (err) {
+            console.log(err);
+            res.send({
+                        result: 'error',
+                        err: err.code
+                    });
+        } else {
+            console.log('vm '+ req.body.uuid_vm + ' stopped');
+            res.send({
+                result: 'vm_stop_succeed'
+            });
+        }
+    });
+});
+
+instance_reboot.post(function(req, res, next) {
+
+    /*lengkapin validasinya lagi */
+    req.assert('uuid_vm', 'Tidak ada UUID VM').notEmpty();
+    var errors = req.validationErrors();
+    if (errors) {
+        res.status(200);
+        res.send(errors);
+        console.log(errors);
+        return;
+    }
+    cmds=[
+            'python vm-control.py reboot ' + req.body.uuid_vm + ' /root/hosts.txt'
+        ];
+    rexec(cfg.hosts, cmds, cfg.conn_options, function(err){
+        if (err) {
+            console.log(err);
+            res.send({
+                        result: 'error',
+                        err: err.code
+                    });
+        } else {
+            console.log('vm '+ req.body.uuid_vm + ' rebooted');
+            res.send({
+                result: 'vm_reboot_succeed'
+            });
+        }
+    });
+});
+// END manajemen vm

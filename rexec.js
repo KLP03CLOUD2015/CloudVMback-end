@@ -2,50 +2,34 @@
 var rexec = require('remote-exec');
 var fs = require('fs');
 var async = require('async');
-
- 
-// see documentation for the ssh2 npm package for a list of all options  
-var ssh_options = {
-    port: 2222,
-    username: 'root',
-    password:'cloudvm',
-    stdout: fs.createWriteStream('out.txt')
-};
- 
-var hosts = [
-    'cloudvm.ddns.net'
-];
- 
-var cmds = [
-    'xe vm-list name-label=centos-template --minimal'
-];
+var cfg = require('./config');
 
 module.exports.createInstance = function(os,nama_instance,callback)
 {
-    cmds=['xe vm-clone vm='+os+' new-name-label='+nama_instance];
-    rexec(hosts, cmds, ssh_options, function(err){
+    cmds=['xe vm-clone vm='+os+' new-name-label="'+nama_instance+'"'];
+    rexec(cfg.hosts, cmds, cfg.ssh_options, function(err){
         if (err) {
             console.log(err);
             callback(err);
         } else {
+            var uuid_vm = fs.readFileSync('out2.txt', 'utf8');
+            uuid_vm = uuid_vm.trim();
             console.log('a vm has been created');
-            callback(null,0);
-
+            console.log(uuid_vm.trim());
+            callback(null,uuid_vm);
         }
     });
 };
 
-
-
 module.exports.getInstanceUUID = function(nama_instance,callback)
 {
     cmds=['xe vm-list name-label='+nama_instance+' --minimal'];
-    rexec(hosts, cmds, ssh_options, function(err){
+    rexec(cfg.hosts, cmds, cfg.ssh_options, function(err){
         if (err) {
             console.log(err);
             callback(err);
         } else {
-            var uuid_vm = fs.readFileSync('out.txt','utf8');
+            var uuid_vm = fs.readFileSync('out2.txt','utf8');
             callback(null,uuid_vm);
         }
      });
@@ -53,7 +37,7 @@ module.exports.getInstanceUUID = function(nama_instance,callback)
 
 module.exports.scaleInstance = function(cpu,memori,storage,uuid,nama_instance,callback)
 {
-    cmds=[   
+    cmds=[
             'xe vm-param-set VCPUs-max='+cpu+' uuid='+uuid,
             'xe vm-param-set VCPUs-at-startup='+cpu+' uuid='+uuid,
             'xe vm-param-set memory-static-min=0 uuid='+uuid,
@@ -62,7 +46,7 @@ module.exports.scaleInstance = function(cpu,memori,storage,uuid,nama_instance,ca
             'xe vm-param-set memory-dynamic-max='+memori+'GiB uuid='+uuid,
             'resize_vm_disk '+nama_instance+' '+storage
         ];
-        rexec(hosts, cmds, ssh_options, function(err){
+        rexec(cfg.hosts, cmds, cfg.ssh_options, function(err){
         if (err) {
             console.log(err);
             callback(err);
@@ -75,15 +59,15 @@ module.exports.scaleInstance = function(cpu,memori,storage,uuid,nama_instance,ca
 
 module.exports.getInstanceIP = function(uuid,callback)
 {
-    cmds=[   
+    cmds=[
             'xe vm-param-get uuid='+uuid+'  param-name=networks'
         ];
-        rexec(hosts, cmds, ssh_options, function(err){
+        rexec(cfg.hosts, cmds, cfg.ssh_options, function(err){
         if (err) {
             console.log(err);
             callback(err);
         } else {
-            var ipstring = fs.readFileSync('out.txt','utf8');
+            var ipstring = fs.readFileSync('out2.txt','utf8');
             var ip = ipstring.split(";");
             var ip2 = ip[0].split(":");
             console.log(ip2[1]);
@@ -94,17 +78,16 @@ module.exports.getInstanceIP = function(uuid,callback)
 
 module.exports.deleteInstance = function(uuid,callback)
 {
-    cmds=[   
+    cmds=[
             'xe vm-uninstall uuid='+uuid+'  force=true'
         ];
-        rexec(hosts, cmds, ssh_options, function(err){
+        rexec(cfg.hosts, cmds, cfg.ssh_options, function(err){
         if (err) {
             console.log(err);
             callback(err);
         } else {
-            console.log("vm is deleted..")
+            console.log("vm is deleted..");
             callback(null,uuid);
-
         }
      });
 };
