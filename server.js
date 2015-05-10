@@ -207,18 +207,18 @@ user_edit.post(function(req, res, next) {
         return;
     }
     var data = {
-        nama_user: req.body.nama,
-        email_user: req.body.email,
-        password_user: req.body.password,
-        no_telp_user: req.body.no_telp,
-        nama_perusahaan_user: req.body.nama_perusahaan,
-        alamat_user: req.body.alamat,
-        nama_cc_user: req.body.nama_cc,
-        alamat_cc_user: req.body.alamat_cc,
-        nomor_cc_user: req.body.nomor_cc,
-        nomor_vcv_user: req.body.nomor_vcv,
-        expire_month_cc_user: req.body.bulan_expire,
-        expire_year_cc_user: req.body.tahun_expire
+        nama_user: req.body.nama_user,
+        email_user: req.body.email_user,
+        password_user: req.body.password_user,
+        no_telp_user: req.body.no_telp_user,
+        nama_perusahaan_user: req.body.nama_perusahaan_user,
+        alamat_user: req.body.alamat_user,
+        nama_cc_user: req.body.nama_cc_user,
+        alamat_cc_user: req.body.alamat_cc_user,
+        nomor_cc_user: req.body.nomor_cc_user,
+        nomor_vcv_user: req.body.nomor_vcv_user,
+        expire_month_cc_user: req.body.expire_month_cc_user,
+        expire_year_cc_user: req.body.expire_year_cc_user
     };
     connectionpool.getConnection(function(err, connection) {
         if (err) {
