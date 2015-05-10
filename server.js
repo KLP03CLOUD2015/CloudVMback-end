@@ -184,21 +184,21 @@ user_edit.post(function(req, res, next) {
     var token = req.body.token;
 
     /*lengkapin validasinya lagi */
-    req.assert('nama', 'Nama harus diisi').notEmpty();
-    req.assert('email', 'Alamat email harus valid').isEmail();
-    req.assert('password', 'Password harus karakter atau angka dengan panjang 6-20').len(6, 20);
-    req.assert('no_telp', 'Nomor telepon harus diisi dan berisi angka saja').notEmpty();
-    req.assert('nama_perusahaan', 'Nama perusahaan harus diisi dan berisikan angka atau huruf saja').notEmpty();
-    req.assert('alamat', 'Alamat harus diisi').notEmpty();
-    req.assert('nama_cc', 'Nama pada Kartu Kredit harus diisi').notEmpty().isAlpha();
-    req.assert('alamat_cc', 'Alamat pada Kartu harus Kredit diisi').notEmpty();
-    req.assert('nomor_cc', 'Nomor Kartu harus Kredit diisi').notEmpty().isNumeric();
-    req.assert('nomor_vcv', 'Nomor VCV harus diisi').notEmpty().isNumeric().len(3);
-    req.assert('bulan_expire', 'Bulan expire kartu kredit harus diisi').notEmpty().isInt({
+    req.assert('nama_user', 'Nama harus diisi').notEmpty();
+    req.assert('email_user', 'Alamat email harus valid').isEmail();
+    req.assert('password_user', 'Password harus karakter atau angka dengan panjang 6-20').len(6, 20);
+    req.assert('no_telp_user', 'Nomor telepon harus diisi dan berisi angka saja').notEmpty();
+    req.assert('nama_perusahaan_user', 'Nama perusahaan harus diisi dan berisikan angka atau huruf saja').notEmpty();
+    req.assert('alamat_user', 'Alamat harus diisi').notEmpty();
+    req.assert('nama_cc_user', 'Nama pada Kartu Kredit harus diisi').notEmpty().isAlpha();
+    req.assert('alamat_cc_user', 'Alamat pada Kartu harus Kredit diisi').notEmpty();
+    req.assert('nomor_cc_user', 'Nomor Kartu harus Kredit diisi').notEmpty().isNumeric();
+    req.assert('nomor_vcv_user', 'Nomor VCV harus diisi').notEmpty().isNumeric().len(3);
+    req.assert('expire_month_cc_user', 'Bulan expire kartu kredit harus diisi').notEmpty().isInt({
         min: 1,
         max: 12
     });
-    req.assert('tahun_expire', 'Tahun expire kartu kredit harus diisi').notEmpty().isInt();
+    req.assert('expire_year_cc_user', 'Tahun expire kartu kredit harus diisi').notEmpty().isInt();
 
     var errors = req.validationErrors();
     if (errors) {
