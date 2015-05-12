@@ -616,7 +616,7 @@ instance_create.post(function(req, res, next) {
 							     },
 							     function(arg1,callback)
 							     {
-							     	 	var sql = 'INSERT INTO INSTANCES  (id_user,nama_instance,uuid_vm,id_plan,status_pembayaran,deleted,tanggal) values("' + id_user + '","' + nama_instance + '","' + arg1+ '",' + id_plan + ',1,0,NOW())';
+							     	 	var sql = 'INSERT INTO INSTANCES  (id_user,nama_instance,uuid_vm,id_plan,status_pembayaran,deleted,tanggal,started) values("' + id_user + '","' + nama_instance + '","' + arg1+ '",' + id_plan + ',1,0,NOW(),0)';
 			                            connection.query(sql, function(err, rows, fields) {
 			                                if (err) {
 			                                    console.error(err);
@@ -1110,6 +1110,25 @@ instance_start.post(function(req, res, next) {
                                             });
                                         }
                                     });
+									var sql = 'update instances set started = 1 where uuid_vm= "' + req.body.uuid_vm+'"';
+                                    console.log(sql);
+                                    connection.query(sql, function(err, rows, fields) {
+                                        if (err) {
+                                            console.error(err);
+                                            res.statuscode = 500;
+                                            res.send({
+                                                result: 'error',
+                                                err: err.code
+                                            });
+                                        } else {
+                                            res.send({
+                                                result: 'success',
+                                                err: '',
+                                                msg: 'instance telah di jalankan'
+                                            });
+                                        }
+                                        connection.release();
+                                    });
                             }
                         });
 
@@ -1194,6 +1213,25 @@ instance_stop.post(function(req, res, next) {
                                                 result: 'vm_stop_succeed'
                                             });
                                         }
+                                    });
+									var sql = 'update instances set started = 0 where uuid_vm= "' + req.body.uuid_vm+'"';
+                                    console.log(sql);
+                                    connection.query(sql, function(err, rows, fields) {
+                                        if (err) {
+                                            console.error(err);
+                                            res.statuscode = 500;
+                                            res.send({
+                                                result: 'error',
+                                                err: err.code
+                                            });
+                                        } else {
+                                            res.send({
+                                                result: 'success',
+                                                err: '',
+                                                msg: 'instance telah di hentikan'
+                                            });
+                                        }
+                                        connection.release();
                                     });
                             }
                         });
