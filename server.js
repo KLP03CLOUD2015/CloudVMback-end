@@ -909,7 +909,7 @@ instance_list.get(function(req, res, next) {
 instance_info.post(function(req, res, next) {
 
 
-    var uuid_vm = req.body.uuid_vm;
+    var uuid_vm = req.body.uuid_vm.trim();
     var id_user = req.body.id_user;
     var token = req.body.token;
 
