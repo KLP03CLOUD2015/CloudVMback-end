@@ -959,7 +959,7 @@ instance_info.post(function(req, res, next) {
                                     },
                                     function(arg0,callback)
                                     {
-                                        var sql = 'select * from instances where uuid_vm = "' + uuid_vm +'"';
+                                        var sql = 'select * from instances where uuid_vm LIKE "%' + uuid_vm +'%"';
                                         console.log(sql);
                                         connection.query(sql, function(err, rows, fields) {
                                             if (err) {
