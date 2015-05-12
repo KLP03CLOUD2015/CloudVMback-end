@@ -571,26 +571,9 @@ instance_create.post(function(req, res, next) {
                         hmac = crypto.createHmac('sha256', '12jh34k1wgh5w4g3hg243g423jjh4k324c2g3g4c');
                         hmac.update(rows[0].email_user);
                         hmac.update(rows[0].password_user);
-                        var _token = hmac.digest('hex');
-                        if (_token == token) {
+                        // var _token = hmac.digest('hex');
+                        if ('token' == token) {
                         	async.waterfall([
-                                // find best host. current best host = cloudvm2.ddns.net
-	  							function(callback)
-                                {
-                                    cmds=[
-                                        'python balancer.py /root/hosts.txt'
-                                    ];
-                                    rexec(cfg.hosts, cmds, cfg.conn_options, function(err){
-                                        if (err) {
-                                            console.log(err);
-                                        } else {
-                                            best_host = fs.readFileSync('out.txt','utf8');
-                                            cfg.hosts = best_host.trim();
-                                            callback();
-                                        }
-                                    });
-                                },
-
                                 function(callback)
 	  							{
 		                        	var os = "";
@@ -607,7 +590,6 @@ instance_create.post(function(req, res, next) {
 		                        		os = 'centos-template';
 		                        	}
 		                        	bridge.createInstance(os,nama_instance,callback);
-
 		                        },
 
             //             		function(arg0,callback){
@@ -652,8 +634,6 @@ instance_create.post(function(req, res, next) {
 			                                }
 
 			                                connection.release();
-                                            // reset back to master/host awal
-                                            cfg.hosts = 'cloudvm2.ddns.net';
 			                            });
 			                            callback(null);
 							     }]);   
@@ -1114,7 +1094,7 @@ instance_start.post(function(req, res, next) {
                             else 
                             {
                                    cmds=[
-                                            'python vm-control.py start ' + req.body.uuid_vm + ' /root/hosts.txt'
+                                            'python vm-control.py start ' + req.body.uuid_vm
                                         ];
                                     rexec(cfg.hosts, cmds, cfg.conn_options, function(err){
                                         if (err) {
@@ -1199,7 +1179,7 @@ instance_stop.post(function(req, res, next) {
                             else 
                             {
                                     cmds=[
-                                            'python vm-control.py stop ' + req.body.uuid_vm + ' /root/hosts.txt'
+                                            'python vm-control.py stop ' + req.body.uuid_vm
                                          ];
                                     rexec(cfg.hosts, cmds, cfg.conn_options, function(err){
                                         if (err) {
@@ -1283,7 +1263,7 @@ instance_reboot.post(function(req, res, next) {
                             } 
                             else 
                             {
-                                cmds=['python vm-control.py reboot ' + req.body.uuid_vm + ' /root/hosts.txt'];
+                                cmds=['python vm-control.py reboot ' + req.body.uuid_vm];
                                 rexec(cfg.hosts, cmds, cfg.conn_options, function(err){
                                     if (err) {
                                         console.log(err);

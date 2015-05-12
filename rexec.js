@@ -12,7 +12,7 @@ module.exports.createInstance = function(os,nama_instance,callback)
             console.log(err);
             callback(err);
         } else {
-            var uuid_vm = fs.readFileSync('out2.txt', 'utf8');
+            var uuid_vm = fs.readFileSync('out.txt', 'utf8');
             uuid_vm = uuid_vm.trim();
             console.log('a vm has been created');
             console.log(uuid_vm.trim());
@@ -23,13 +23,13 @@ module.exports.createInstance = function(os,nama_instance,callback)
 
 module.exports.getInstanceUUID = function(nama_instance,callback)
 {
-    cmds=['xe vm-list name-label='+nama_instance+' --minimal'];
+    cmds=['xe vm-list name-label="'+nama_instance+'" --minimal'];
     rexec(cfg.hosts, cmds, cfg.ssh_options, function(err){
         if (err) {
             console.log(err);
             callback(err);
         } else {
-            var uuid_vm = fs.readFileSync('out2.txt','utf8');
+            var uuid_vm = fs.readFileSync('out.txt','utf8');
             callback(null,uuid_vm);
         }
      });
@@ -67,7 +67,7 @@ module.exports.getInstanceIP = function(uuid,callback)
             console.log(err);
             callback(err);
         } else {
-            var ipstring = fs.readFileSync('out2.txt','utf8');
+            var ipstring = fs.readFileSync('out.txt','utf8');
             var ip = ipstring.split(";");
             var ip2 = ip[0].split(":");
             console.log(ip2[1]);
@@ -79,7 +79,7 @@ module.exports.getInstanceIP = function(uuid,callback)
 module.exports.deleteInstance = function(uuid,callback)
 {
     cmds=[
-            'xe vm-uninstall uuid='+uuid+'  force=true'
+            'xe vm-uninstall uuid='+uuid+' force=true'
         ];
         rexec(cfg.hosts, cmds, cfg.ssh_options, function(err){
         if (err) {
