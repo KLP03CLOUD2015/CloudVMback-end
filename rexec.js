@@ -70,8 +70,14 @@ module.exports.getInstanceIP = function(uuid,callback)
             var ipstring = fs.readFileSync('out.txt','utf8');
             var ip = ipstring.split(";");
             var ip2 = ip[0].split(":");
-            console.log(ip2[1]);
-            callback(null,ip2[1]);
+            var ip_hasil = ip2[1].trim();
+            console.log(ip_hasil);
+            var ip_split = ip_hasil.split('.');
+            console.log(ip_split[3]);
+            var hostid = parseInt(ip_split[3]);
+            var url_port = 3000 + (hostid-150);
+            var final_address = 'cloudvm2.ddns.net:'+ url_port;
+            callback(null,final_address);
         }
      });
 };
