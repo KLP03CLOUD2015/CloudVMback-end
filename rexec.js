@@ -4,8 +4,10 @@ var fs = require('fs');
 var async = require('async');
 var cfg = require('./config');
 
+
 module.exports.createInstance = function(os,nama_instance,callback)
 {
+    cfg.ssh_options.stdout = fs.createWriteStream('./out.txt');
     cmds=['xe vm-clone vm='+os+' new-name-label="'+nama_instance+'"'];
     rexec(cfg.hosts, cmds, cfg.ssh_options, function(err){
         if (err) {

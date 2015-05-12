@@ -8,15 +8,16 @@ var ssh_options = {
     stdout: fs.createWriteStream('./out.txt')
 };
 
+
 var hosts = [
     'cloudvm2.ddns.net'
 ];
 
 var connectionpool = mysql.createPool({
     connectionLimit: 1000,
-    host: 'localhost',
+    host: 'cloudvm.ddns.net',
     user: 'root',
-    password: 'root',
+    password: '',
     database: 'cloudVM'
 });
 

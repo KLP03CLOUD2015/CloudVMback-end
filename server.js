@@ -592,11 +592,13 @@ instance_create.post(function(req, res, next) {
 		                        	bridge.createInstance(os,nama_instance,callback);
 		                        },
 
-            //             		function(arg0,callback){
-		          //           		var uuid_vm = bridge.getInstanceUUID(nama_instance,callback);
-							     // },
-							     function(arg0,callback)
+                        		function(arg0,callback){
+                                    console.log("arg0:" + arg0);
+		                 		   bridge.getInstanceUUID(nama_instance,callback);
+							     },
+							     function(arg1,callback)
 							     {
+                                        console.log("arg1:" + arg1);
  	 									var spec_sql = 'select jumlah_cpu , jumlah_memori , jumlah_storage from pricing where id_plan ='+id_plan;
 			                            connection.query(spec_sql, function(err, rows, fields) {
 			                                if (err) {
@@ -609,14 +611,15 @@ instance_create.post(function(req, res, next) {
 			                                } 
 			                                else 
 			                                {
-	    										bridge.scaleInstance(rows[0].jumlah_cpu,rows[0].jumlah_memori,rows[0].jumlah_storage,arg0,nama_instance,callback);
+	    										bridge.scaleInstance(rows[0].jumlah_cpu,rows[0].jumlah_memori,rows[0].jumlah_storage,arg1,nama_instance,callback);
 			                                }
 
 			                            });
 							     },
-							     function(arg1,callback)
+							     function(arg2,callback)
 							     {
-							     	 	var sql = 'INSERT INTO INSTANCES  (id_user,nama_instance,uuid_vm,id_plan,status_pembayaran,deleted,tanggal,started) values("' + id_user + '","' + nama_instance + '","' + arg1+ '",' + id_plan + ',1,0,NOW(),0)';
+                                        console.log("arg2:" + arg2);
+							     	 	var sql = 'INSERT INTO INSTANCES  (id_user,nama_instance,uuid_vm,id_plan,status_pembayaran,deleted,tanggal,started) values("' + id_user + '","' + nama_instance + '","' + arg2+ '",' + id_plan + ',1,0,NOW(),0)';
 			                            connection.query(sql, function(err, rows, fields) {
 			                                if (err) {
 			                                    console.error(err);
@@ -636,7 +639,8 @@ instance_create.post(function(req, res, next) {
 			                                connection.release();
 			                            });
 			                            callback(null);
-							     }]);   
+							     }
+                                 ]);   
 
 
                         } else {
@@ -1099,15 +1103,15 @@ instance_start.post(function(req, res, next) {
                                     rexec(cfg.hosts, cmds, cfg.conn_options, function(err){
                                         if (err) {
                                             console.log(err);
-                                            res.send({
+                                            /*res.send({
                                                         result: 'error',
                                                         err: err.code
-                                                    });
+                                                    });*/
                                         } else {
                                             console.log('vm '+ req.body.uuid_vm + ' started');
-                                            res.send({
+                                            /*res.send({
                                                 result: 'vm_start_succeed'
-                                            });
+                                            });*/
                                         }
                                     });
 									var sql = 'update instances set started = 1 where uuid_vm= "' + req.body.uuid_vm+'"';
@@ -1203,15 +1207,15 @@ instance_stop.post(function(req, res, next) {
                                     rexec(cfg.hosts, cmds, cfg.conn_options, function(err){
                                         if (err) {
                                             console.log(err);
-                                            res.send({
+                                            /*res.send({
                                                         result: 'error',
                                                         err: err.code
-                                                    });
+                                                    });*/
                                         } else {
                                             console.log('vm '+ req.body.uuid_vm + ' stopped');
-                                            res.send({
+                                            /*res.send({
                                                 result: 'vm_stop_succeed'
-                                            });
+                                            });*/
                                         }
                                     });
 									var sql = 'update instances set started = 0 where uuid_vm= "' + req.body.uuid_vm+'"';
