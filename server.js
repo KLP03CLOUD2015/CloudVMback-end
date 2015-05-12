@@ -571,8 +571,8 @@ instance_create.post(function(req, res, next) {
                         hmac = crypto.createHmac('sha256', '12jh34k1wgh5w4g3hg243g423jjh4k324c2g3g4c');
                         hmac.update(rows[0].email_user);
                         hmac.update(rows[0].password_user);
-                        // var _token = hmac.digest('hex');
-                        if ('token' == token) {
+                        var _token = hmac.digest('hex');
+                        if (_token == token) {
                         	async.waterfall([
                                 function(callback)
 	  							{
