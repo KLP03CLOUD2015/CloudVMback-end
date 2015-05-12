@@ -1100,7 +1100,7 @@ instance_start.post(function(req, res, next) {
                                    cmds=[
                                             'python vm-control.py start ' + req.body.uuid_vm
                                         ];
-                                    rexec(cfg.hosts, cmds, cfg.conn_options, function(err){
+                                    rexec(cfg.hosts, cmds, cfg.ssh_options, function(err){
                                         if (err) {
                                             console.log(err);
                                             /*res.send({
@@ -1204,7 +1204,7 @@ instance_stop.post(function(req, res, next) {
                                     cmds=[
                                             'python vm-control.py stop ' + req.body.uuid_vm
                                          ];
-                                    rexec(cfg.hosts, cmds, cfg.conn_options, function(err){
+                                    rexec(cfg.hosts, cmds, cfg.ssh_options, function(err){
                                         if (err) {
                                             console.log(err);
                                             /*res.send({
@@ -1306,7 +1306,7 @@ instance_reboot.post(function(req, res, next) {
                             else 
                             {
                                 cmds=['python vm-control.py reboot ' + req.body.uuid_vm];
-                                rexec(cfg.hosts, cmds, cfg.conn_options, function(err){
+                                rexec(cfg.hosts, cmds, cfg.ssh_options, function(err){
                                     if (err) {
                                         console.log(err);
                                         res.send({
